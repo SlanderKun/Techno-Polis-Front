@@ -28,35 +28,31 @@ jobs:
           docker push "$IMAGE:sha-${{ github.sha }}"
           docker push "$IMAGE:latest"
 
-      - name: Deploy via SSH
-        uses: appleboy/ssh-action@v1.2.0
-        with:
-          host: ${{ secrets.SSH_HOST }}
-          username: ${{ secrets.SSH_USER }}
-          key: ${{ secrets.SSH_KEY }}
-          script_stop: true
-          script: |
-            set -euo pipefail
-            OWNER_LC=$(echo '${{ github.repository_owner }}' | tr '[:upper:]' '[:lower:]')
+      - - name: Deploy via SSH
+  uses: appleboy/ssh-action@v1.2.0
+  with:
+    host: ${{ secrets.SSH_HOST }}
+    username: ${{ secrets.SSH_USER }}
+    key: ${{ secrets.SSH_KEY }}
+    script_stop: true
+    script: |
+      set -euo pipefail
+      OWNER_LC=$(echo '${{ github.repository_owner }}' | tr '[:upper:]' '[:lower:]')
 
-            sudo install -d -m 755 /opt/front
-            cat > /opt/front/deploy.env <<EOF
-FRONTEND_OWNER=${OWNER_LC}
-FRONTEND_TAG=sha-${{ github.sha }}
-EOF
+      sudo install -d -m 755 /opt/front
+      printf 'FRONTEND_OWNER=%s\nFRONTEND_TAG=sha-%s\n' "$OWNER_LC" "${{ github.sha }}" \
+        | sudo tee /opt/front/deploy.env >/dev/null
 
-            echo "${{ secrets.GHCR_READ_PAT }}" | docker login ghcr.io -u "${{ secrets.GHCR_READ_USERNAME }}" --password-stdin
+      echo '${{ secrets.GHCR_READ_PAT }}' | docker login ghcr.io -u '${{ secrets.GHCR_READ_USERNAME }}' --password-stdin
 
-            cd /opt/front
+      cd /opt/front
+      docker compose -f compose.yml -f compose.stub.yml down || true
+      docker compose -f compose.yml --env-file /opt/front/deploy.env pull frontend
+      docker compose -f compose.yml --env-file /opt/front/deploy.env up -d frontend
 
-            docker compose -f compose.yml -f compose.stub.yml down || true
-            docker compose -f compose.yml --env-file /opt/front/deploy.env pull frontend
-            docker compose -f compose.yml --env-file /opt/front/deploy.env up -d frontend
+      docker compose -f /srv/proxy/docker-compose.yml up -d nginx
+      docker exec proxy_nginx nginx -t && docker exec proxy_nginx nginx -s reload || true
 
+      curl -sfI http://127.0.0.1/ | head -n1
+      curl -sf  http://127.0.0.1:8888/ | head -n1
 
-            docker compose -f /srv/proxy/docker-compose.yml up -d nginx
-            docker exec proxy_nginx nginx -t && docker exec proxy_nginx nginx -s reload || true
-
-
-            curl -sfI http://127.0.0.1/ | head -n1
-            curl -sf  http://127.0.0.1:8888/ | head -n1
