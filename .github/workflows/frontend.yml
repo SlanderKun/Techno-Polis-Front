@@ -16,7 +16,7 @@ permissions:
 env:
   REGISTRY: ghcr.io
   FRONTEND_IMAGE: technopolis-frontend
-  DEPLOY_DIR: /opt/myapp   # можно поменять путь здесь
+  DEPLOY_DIR: /opt/myapp/frontend   # можно поменять путь здесь
 
 jobs:
   build-and-push:
