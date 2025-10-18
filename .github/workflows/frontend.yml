@@ -1,8 +1,8 @@
-name: Frontend CI/CD (debug)
+name: Frontend CI/CD (debug hardened)
 
 on:
   push:
-    branches: [ "master" ]
+    branches: [ "main" ]
   workflow_dispatch: {}
 
 concurrency:
@@ -15,7 +15,8 @@ permissions:
 
 env:
   REGISTRY: ghcr.io
-  FRONTEND_IMAGE: technopolis-frontend   # имя образа фронта
+  FRONTEND_IMAGE: technopolis-frontend
+  DEPLOY_DIR: /opt/myapp   # <-- НЕ требуем секрет. Если нужно другое — просто поменяй тут.
 
 jobs:
   build-and-push:
@@ -26,17 +27,16 @@ jobs:
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
-        with:
-          fetch-depth: 1
+        with: { fetch-depth: 1 }
 
-      # DEBUG: покажем, что реально есть в корне
       - name: Debug - list files at repo root
         run: |
+          set -euxo pipefail
           pwd
           echo "GITHUB_WORKSPACE=$GITHUB_WORKSPACE"
           ls -la
-          echo "---- find docker/nginx files ----"
-          find . -maxdepth 2 -type f \( -name "Dockerfile" -o -name "nginx.conf" -o -name "docker-compose.yml" -o -name "compose.yml" -o -name "docker-compose.yaml" -o -name "compose.yaml" \) -print -exec ls -l {} \;
+          echo "---- find important files ----"
+          find . -maxdepth 2 -type f \( -name "Dockerfile" -o -name "nginx.conf" -o -name "docker-compose.yml" \) -print -exec ls -l {} \;
 
       - name: Owner -> lowercase
         id: lower_owner
@@ -52,7 +52,6 @@ jobs:
       - name: Setup Buildx
         uses: docker/setup-buildx-action@v3
 
-      # Сборка образа фронта по Dockerfile в корне репо
       - name: Build & Push frontend
         id: bp
         uses: docker/build-push-action@v6
@@ -65,12 +64,9 @@ jobs:
           cache-from: type=registry,ref=${{ env.REGISTRY }}/${{ steps.lower_owner.outputs.val }}/${{ env.FRONTEND_IMAGE }}:buildcache
           cache-to: type=registry,ref=${{ env.REGISTRY }}/${{ steps.lower_owner.outputs.val }}/${{ env.FRONTEND_IMAGE }}:buildcache,mode=max
 
-      # DEBUG: вывести дайджест и метаданные сборки
-      - name: Debug - image digest & metadata
+      - name: Debug - image ref
         run: |
           echo "IMAGE=${{ env.REGISTRY }}/${{ steps.lower_owner.outputs.val }}/${{ env.FRONTEND_IMAGE }}:sha-${{ github.sha }}"
-          echo "DIGEST=${{ steps.bp.outputs.digest || 'n/a' }}"
-          test -f "$GITHUB_OUTPUT" || true
 
   deploy:
     needs: build-and-push
@@ -82,19 +78,18 @@ jobs:
     steps:
       - name: Checkout repository (for scp)
         uses: actions/checkout@v4
-        with:
-          fetch-depth: 1
+        with: { fetch-depth: 1 }
 
-      # DEBUG: убедимся, что файлы существуют именно в корне раннера
       - name: Debug - verify files exist before SCP
         run: |
           set -euxo pipefail
           pwd
           ls -la
-          test -f ./docker-compose.yml && echo "OK: docker-compose.yml found" || (echo "MISS: docker-compose.yml" && exit 1)
-          test -f ./nginx.conf && echo "OK: nginx.conf found" || (echo "MISS: nginx.conf" && exit 1)
+          test -f ./docker-compose.yml || (echo "MISS: docker-compose.yml not found at repo root" && exit 1)
+          test -f ./nginx.conf || (echo "MISS: nginx.conf not found at repo root" && exit 1)
 
-      # Копируем ТОЛЬКО эти два файла из корня
+      # Копируем ИМЕННО эти два файла. Используем фиксированный target=/opt/myapp,
+      # чтобы не зависеть от отсутствующего секрета SERVER_DIR.
       - name: Upload compose & nginx to server
         uses: appleboy/scp-action@v0.1.7
         with:
@@ -105,13 +100,12 @@ jobs:
           source: |
             ./docker-compose.yml
             ./nginx.conf
-          target: ${{ secrets.SERVER_DIR }}
+          target: ${{ env.DEPLOY_DIR }}
           overwrite: true
           strip_components: 0
           rm: false
 
-      # DEBUG: проверим, что файлы приехали на сервер
-      - name: Remote debug - ls in SERVER_DIR
+      - name: Remote debug - ensure files exist on server
         uses: appleboy/ssh-action@v1.2.0
         with:
           host: ${{ secrets.SSH_HOST }}
@@ -120,16 +114,15 @@ jobs:
           port: ${{ secrets.SSH_PORT || 22 }}
           script: |
             set -euxo pipefail
-            cd "${{ secrets.SERVER_DIR }}"
+            cd "${{ env.DEPLOY_DIR }}"
             pwd
             ls -la
             sha256sum docker-compose.yml nginx.conf || true
 
-      # Деплой фронта (nginx/фронт, БЭК НЕ ТРОГАЕМ)
       - name: Remote deploy (frontend only, with debug)
         uses: appleboy/ssh-action@v1.2.0
         env:
-          SERVER_DIR:   ${{ secrets.SERVER_DIR }}
+          DEPLOY_DIR:   ${{ env.DEPLOY_DIR }}
           OWNER_LOWER:  ${{ env.OWNER_LOWER }}
           FRONTEND_TAG: ${{ env.FRONTEND_TAG }}
           REGISTRY:     ${{ env.REGISTRY }}
@@ -141,17 +134,16 @@ jobs:
           username: ${{ secrets.SSH_USER }}
           key: ${{ secrets.SSH_KEY }}
           port: ${{ secrets.SSH_PORT || 22 }}
-          envs: SERVER_DIR,OWNER_LOWER,FRONTEND_TAG,REGISTRY,FRONTEND_IMAGE,GHCR_USER,GHCR_TOKEN
+          envs: DEPLOY_DIR,OWNER_LOWER,FRONTEND_TAG,REGISTRY,FRONTEND_IMAGE,GHCR_USER,GHCR_TOKEN
           script: |
             set -euxo pipefail
-            cd "$SERVER_DIR"
+            cd "$DEPLOY_DIR"
             echo "SERVER_DIR=$(pwd)"
 
-            # 0) Docker login + сеть на всякий
-            docker login ${REGISTRY} -u "${GHCR_USER}" -p "${GHCR_TOKEN}"
-            docker network create apps || true
+            # GHCR login
+            docker login ${REGISTRY} -u "${GHCR_USER}" -p "${GHCR_TOKEN}" >/dev/null
 
-            # 1) deploy.env: только фронтовые теги
+            # deploy.env для фронта
             touch deploy.env
             sed -i '/^FRONTEND_OWNER=/d;/^FRONTEND_TAG=/d' deploy.env
             cat >> deploy.env <<EOF
@@ -160,35 +152,32 @@ jobs:
             EOF
             echo "== deploy.env ==" && cat deploy.env
 
-            # 2) собрать список compose-файлов
+            # собрать список compose-файлов
             FILES=""
             for f in docker-compose.yml compose.yml; do [ -f "$f" ] && FILES="$FILES -f $f"; done
             for f in compose.override.yml compose.db.yml; do [ -f "$f" ] && FILES="$FILES -f $f"; done
-            if [ -z "$FILES" ]; then
-              echo "compose-файлы не найдены в $SERVER_DIR"; exit 1
-            fi
+            [ -n "$FILES" ] || { echo "compose-файлы не найдены в $DEPLOY_DIR"; exit 1; }
             echo "FILES=$FILES"
-
             compose() { docker compose $FILES --env-file .env --env-file deploy.env "$@"; }
 
             echo "== docker compose config --services =="
             compose config --services || true
 
-            # 3) подтянуть новые образы (если в compose указаны image:)
+            # если compose использует image:, подтянем свежий тег
             compose pull --ignore-buildable || true
 
-            # 4) поднять front/nginx и показать их статус
+            # поднимем фронт и nginx (если есть)
             (compose up -d frontend || true)
             (compose up -d nginx || true)
 
             echo "== docker compose ps =="
             compose ps || true
 
-            echo "== docker logs (last lines) =="
-            (compose logs --tail=60 nginx || true)
-            (compose logs --tail=60 frontend || true)
+            echo "== last logs =="
+            (compose logs --tail=80 nginx || true)
+            (compose logs --tail=80 frontend || true)
 
-            # 5) healthcheck фронта
+            # healthcheck
             set +e
             for u in http://localhost/ http://127.0.0.1/; do
               if curl -fsS "$u" >/dev/null 2>&1; then
