@@ -1,8 +1,8 @@
 FROM node:20 AS build
 WORKDIR /app
 COPY package*.json ./
-RUN npm ci
 COPY . .
+RUN npm install
 RUN npm run build
 
 FROM nginx:stable

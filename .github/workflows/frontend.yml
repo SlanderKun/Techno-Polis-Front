@@ -16,7 +16,7 @@ permissions:
 env:
   REGISTRY: ghcr.io
   FRONTEND_IMAGE: technopolis-frontend
-  DEPLOY_DIR: /opt/myapp   # можно поменять путь здесь
+  DEPLOY_DIR: /opt/myapp/frontend   # можно поменять путь здесь
 
 jobs:
   build-and-push:
@@ -47,7 +47,7 @@ jobs:
         uses: docker/login-action@v3
         with:
           registry: ${{ env.REGISTRY }}
-          username: ${{ github.actor }}
+          username: ${{ secrets.SSH_USER }}
           password: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Setup Buildx
@@ -96,9 +96,8 @@ jobs:
           username: ${{ secrets.SSH_USER }}
           key: ${{ secrets.SSH_KEY }}
           port: ${{ secrets.SSH_PORT != '' && secrets.SSH_PORT || '22' }}
-          # ВАЖНО: одна строка, пути через запятую, без "./"
-          source: "docker-compose.yml,nginx.conf"
-          # target должен быть директорией, не файлом
+          source: "./"
+
           target: ${{ env.DEPLOY_DIR }}
           overwrite: true
           strip_components: 0
