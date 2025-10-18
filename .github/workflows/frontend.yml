@@ -96,7 +96,8 @@ jobs:
           username: ${{ secrets.SSH_USER }}
           key: ${{ secrets.SSH_KEY }}
           port: ${{ secrets.SSH_PORT != '' && secrets.SSH_PORT || '22' }}
-          source: "docker-compose.yml,nginx.conf,Dockerfile"
+          source: "docker-compose.yml,nginx.conf,Dockerfile,package.json,package-lock.json"
+
           target: ${{ env.DEPLOY_DIR }}
           overwrite: true
           strip_components: 0
