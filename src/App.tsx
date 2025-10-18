@@ -9,9 +9,11 @@ const App:FC = ()=>  {
     return (
         <div>
             <Routes>
-                <Route path={"*"} element={<PageLayout>
+                <Route path={"*"} element={
+                    <PageLayout>
 
-                </PageLayout>}/>
+                    </PageLayout>
+                }/>
                 <Route path='profile/'></Route>
             </Routes>
         </div>
