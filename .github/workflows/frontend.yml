@@ -95,15 +95,15 @@ jobs:
           host: ${{ secrets.SSH_HOST }}
           username: ${{ secrets.SSH_USER }}
           key: ${{ secrets.SSH_KEY }}
-          # Нельзя использовать `||` — это логический OR. Делаем "дефолт 22" корректно:
           port: ${{ secrets.SSH_PORT != '' && secrets.SSH_PORT || '22' }}
-          source: |
-            ./docker-compose.yml
-            ./nginx.conf
+          # ВАЖНО: одна строка, пути через запятую, без "./"
+          source: "docker-compose.yml,nginx.conf"
+          # target должен быть директорией, не файлом
           target: ${{ env.DEPLOY_DIR }}
           overwrite: true
           strip_components: 0
           rm: false
+
 
       - name: Remote debug - ensure files exist on server
         uses: appleboy/ssh-action@v1.2.0
