@@ -1,0 +1,156 @@
+:root {
+    /* colors */
+    --clr-white: white;
+    --clr-light: rgba(244, 244, 244, 1);
+    --clr-accent: rgba(211, 26, 43, 1);
+    --clr-black: #000;
+}
+
+
+
+/* ------------------- */
+/* Reset               */
+/* ------------------- */
+/* Box sizing */
+*,
+*::before,
+*::after {
+    box-sizing: border-box;
+}
+
+/* Reset margins */
+body,
+h1,
+h2,
+h3,
+h4,
+h5,
+p,
+figure,
+picture {
+    margin: 0; 
+}
+
+h1,
+h2,
+h3,
+h4,
+h5,
+h6,
+p {
+    font-weight: 400;
+}
+
+
+input,
+button,
+textarea,
+select {
+    font: inherit;
+}
+
+
+@media (prefers-reduced-motion: reduce) {  
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}
+
+
+
+/* ------------------- */
+/* Compontents         */
+/* ------------------- */
+.verify {
+    background-color: var(--clr-white);
+    width: 100%;
+    padding-left: 7%;
+    padding-right: 7%;
+}
+
+.verificationContainer {
+    width: 100%;
+    max-width: 1200px;
+}
+
+.title {
+    font-size: 5vw;
+    font-weight: 800;
+    color: var(--clr-black);
+    margin-bottom: 20px;
+}
+
+.roleSwitch {
+    border: 1px solid;
+    display: flex;
+    flex-wrap: wrap;
+    width: fit-content;
+    gap: .5rem;      
+    padding: 0.2em;           
+    border-radius: 10px;     
+    margin-bottom: 40px;
+}
+
+
+.roleSwitch button{
+    background-color: #ffffff;
+    font-size: 2vw;
+    border-radius: 10px;
+    padding: .2em 1em;
+    border: none;
+    cursor: pointer;
+    transition: background-color 0.3s, color 0.3s;
+}
+
+
+.active {
+  background-color: rgba(211, 26, 43, 1) !important;
+  color: rgb(255, 255, 255)  ; 
+}
+
+/* .active {
+    margin-right: .5rem;
+} */
+
+.inputGroup {
+    min-width: 300px;
+    margin-bottom: 18px;
+    flex: 1 1 100% !important;
+}
+
+.hrFormSection, 
+.universityFormSection {
+    display: flex;
+    gap: 20px;
+}
+
+input[type="checkbox"]:checked {
+    background-color: var(--clr-accent);
+    border: 1px solid var(--clr-accent);
+}
+
+@media (max-width: 700px) {
+    .title {
+        text-align: center;
+        margin-inline: auto;
+        font-size: 64px;
+    }
+    .roleSwitch {
+        margin-inline: auto;
+        padding: .2em;
+    }
+    .roleSwitch button{
+        font-size: 22px;
+    }
+    .hrFormSection, 
+    .universityFormSection {
+        flex-direction: column;
+    }
+    
+}
+

@@ -3,6 +3,7 @@ import {observer} from "mobx-react-lite";
 import type {FC} from "react";
 import {Route, Routes} from "react-router-dom";
 import PageLayout from "./shared/UI/PageLayout/PageLayout.tsx";
+import { Verification } from './pages/Profile/UserVerificationForm/Verification.tsx';
 
 const App:FC = ()=>  {
 
@@ -14,7 +15,8 @@ const App:FC = ()=>  {
 
                     </PageLayout>
                 }/>
-                <Route path='profile/'></Route>
+                <Route path='profile/' element={<Verification />}>
+                </Route>
             </Routes>
         </div>
     )
