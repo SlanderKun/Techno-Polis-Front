@@ -4,22 +4,12 @@ import reactHooks from 'eslint-plugin-react-hooks'
 import reactRefresh from 'eslint-plugin-react-refresh'
 import tseslint from 'typescript-eslint'
 import { defineConfig, globalIgnores } from 'eslint/config'
-<<<<<<< HEAD
-=======
-import pluginMobx from "eslint-plugin-mobx"
->>>>>>> 3c2e8c62648fb58f2886a33d928d826ba47c2acb
 
 export default defineConfig([
   globalIgnores(['dist']),
   {
     files: ['**/*.{ts,tsx}'],
-<<<<<<< HEAD
     extends: [
-=======
-    plugins: { mobx: pluginMobx },
-    extends: [
-      pluginMobx.flatConfigs.recommended,
->>>>>>> 3c2e8c62648fb58f2886a33d928d826ba47c2acb
       js.configs.recommended,
       tseslint.configs.recommended,
       reactHooks.configs['recommended-latest'],
@@ -29,14 +19,5 @@ export default defineConfig([
       ecmaVersion: 2020,
       globals: globals.browser,
     },
-<<<<<<< HEAD
-=======
-    rules: {
-      "mobx/exhaustive-make-observable": "warn",
-      "mobx/unconditional-make-observable": "error",
-      "mobx/missing-make-observable": "error",
-      "mobx/missing-observer": "warn"
-    }
->>>>>>> 3c2e8c62648fb58f2886a33d928d826ba47c2acb
   },
 ])

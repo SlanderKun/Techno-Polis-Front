@@ -10,13 +10,6 @@
     "preview": "vite preview"
   },
   "dependencies": {
-<<<<<<< HEAD
-=======
-    "axios": "^1.12.2",
-    "eslint-plugin-mobx": "^0.0.13",
-    "mobx": "^6.15.0",
-    "mobx-react-lite": "^4.1.1",
->>>>>>> 3c2e8c62648fb58f2886a33d928d826ba47c2acb
     "react": "^19.1.1",
     "react-dom": "^19.1.1"
   },

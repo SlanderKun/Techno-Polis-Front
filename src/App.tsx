@@ -1,14 +1,7 @@
 import { useState } from 'react'
-<<<<<<< HEAD
 import reactLogo from './assets/react.svg'
 import viteLogo from '/vite.svg'
 import './App.css'
-=======
-import reactLogo from './shared/assets/react.svg'
-import viteLogo from '/vite.svg'
-import './App.css'
-import {observer} from "mobx-react-lite";
->>>>>>> 3c2e8c62648fb58f2886a33d928d826ba47c2acb
 
 function App() {
   const [count, setCount] = useState(0)
@@ -39,8 +32,4 @@ function App() {
   )
 }
 
-<<<<<<< HEAD
 export default App
-=======
-export default observer(App)
->>>>>>> 3c2e8c62648fb58f2886a33d928d826ba47c2acb
