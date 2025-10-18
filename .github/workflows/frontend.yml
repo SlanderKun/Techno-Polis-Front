@@ -2,7 +2,7 @@ name: Frontend CI/CD (debug hardened)
 
 on:
   push:
-    branches: [ "main" ]
+    branches: [ "master" ]
   workflow_dispatch: {}
 
 concurrency:
@@ -16,7 +16,7 @@ permissions:
 env:
   REGISTRY: ghcr.io
   FRONTEND_IMAGE: technopolis-frontend
-  DEPLOY_DIR: /opt/myapp   # <-- НЕ требуем секрет. Если нужно другое — просто поменяй тут.
+  DEPLOY_DIR: /opt/myapp   # можно поменять путь здесь
 
 jobs:
   build-and-push:
@@ -40,6 +40,7 @@ jobs:
 
       - name: Owner -> lowercase
         id: lower_owner
+        shell: bash
         run: echo "val=${GITHUB_REPOSITORY_OWNER,,}" >> "$GITHUB_OUTPUT"
 
       - name: Login to GHCR
@@ -88,15 +89,14 @@ jobs:
           test -f ./docker-compose.yml || (echo "MISS: docker-compose.yml not found at repo root" && exit 1)
           test -f ./nginx.conf || (echo "MISS: nginx.conf not found at repo root" && exit 1)
 
-      # Копируем ИМЕННО эти два файла. Используем фиксированный target=/opt/myapp,
-      # чтобы не зависеть от отсутствующего секрета SERVER_DIR.
       - name: Upload compose & nginx to server
         uses: appleboy/scp-action@v0.1.7
         with:
           host: ${{ secrets.SSH_HOST }}
           username: ${{ secrets.SSH_USER }}
           key: ${{ secrets.SSH_KEY }}
-          port: ${{ secrets.SSH_PORT || 22 }}
+          # Нельзя использовать `||` — это логический OR. Делаем "дефолт 22" корректно:
+          port: ${{ secrets.SSH_PORT != '' && secrets.SSH_PORT || '22' }}
           source: |
             ./docker-compose.yml
             ./nginx.conf
@@ -111,7 +111,7 @@ jobs:
           host: ${{ secrets.SSH_HOST }}
           username: ${{ secrets.SSH_USER }}
           key: ${{ secrets.SSH_KEY }}
-          port: ${{ secrets.SSH_PORT || 22 }}
+          port: ${{ secrets.SSH_PORT != '' && secrets.SSH_PORT || '22' }}
           script: |
             set -euxo pipefail
             cd "${{ env.DEPLOY_DIR }}"
@@ -122,26 +122,27 @@ jobs:
       - name: Remote deploy (frontend only, with debug)
         uses: appleboy/ssh-action@v1.2.0
         env:
-          DEPLOY_DIR:   ${{ env.DEPLOY_DIR }}
-          OWNER_LOWER:  ${{ env.OWNER_LOWER }}
-          FRONTEND_TAG: ${{ env.FRONTEND_TAG }}
-          REGISTRY:     ${{ env.REGISTRY }}
+          DEPLOY_DIR:     ${{ env.DEPLOY_DIR }}
+          OWNER_LOWER:    ${{ env.OWNER_LOWER }}
+          FRONTEND_TAG:   ${{ env.FRONTEND_TAG }}
+          REGISTRY:       ${{ env.REGISTRY }}
           FRONTEND_IMAGE: ${{ env.FRONTEND_IMAGE }}
-          GHCR_USER:    ${{ secrets.GHCR_READ_USERNAME || github.actor }}
-          GHCR_TOKEN:   ${{ secrets.GHCR_READ_TOKEN    || secrets.GITHUB_TOKEN }}
+          # Корректные fallback'и без `||`
+          GHCR_USER:  ${{ secrets.GHCR_READ_USERNAME != '' && secrets.GHCR_READ_USERNAME || github.actor }}
+          GHCR_TOKEN: ${{ secrets.GHCR_READ_TOKEN    != '' && secrets.GHCR_READ_TOKEN    || secrets.GITHUB_TOKEN }}
         with:
           host: ${{ secrets.SSH_HOST }}
           username: ${{ secrets.SSH_USER }}
           key: ${{ secrets.SSH_KEY }}
-          port: ${{ secrets.SSH_PORT || 22 }}
+          port: ${{ secrets.SSH_PORT != '' && secrets.SSH_PORT || '22' }}
           envs: DEPLOY_DIR,OWNER_LOWER,FRONTEND_TAG,REGISTRY,FRONTEND_IMAGE,GHCR_USER,GHCR_TOKEN
           script: |
             set -euxo pipefail
             cd "$DEPLOY_DIR"
             echo "SERVER_DIR=$(pwd)"
 
-            # GHCR login
-            docker login ${REGISTRY} -u "${GHCR_USER}" -p "${GHCR_TOKEN}" >/dev/null
+            # GHCR login (на сервере обычно нужен PAT с read:packages)
+            docker login "${REGISTRY}" -u "${GHCR_USER}" -p "${GHCR_TOKEN}" >/dev/null
 
             # deploy.env для фронта
             touch deploy.env
@@ -158,7 +159,13 @@ jobs:
             for f in compose.override.yml compose.db.yml; do [ -f "$f" ] && FILES="$FILES -f $f"; done
             [ -n "$FILES" ] || { echo "compose-файлы не найдены в $DEPLOY_DIR"; exit 1; }
             echo "FILES=$FILES"
-            compose() { docker compose $FILES --env-file .env --env-file deploy.env "$@"; }
+
+            # аккуратно собрать список --env-file (только если файлы существуют)
+            ENVFILES=""
+            [ -f .env ] && ENVFILES="$ENVFILES --env-file .env"
+            [ -f deploy.env ] && ENVFILES="$ENVFILES --env-file deploy.env"
+
+            compose() { docker compose $FILES $ENVFILES "$@"; }
 
             echo "== docker compose config --services =="
             compose config --services || true
@@ -166,7 +173,7 @@ jobs:
             # если compose использует image:, подтянем свежий тег
             compose pull --ignore-buildable || true
 
-            # поднимем фронт и nginx (если есть)
+            # поднимем фронт и nginx (если есть такие сервисы)
             (compose up -d frontend || true)
             (compose up -d nginx || true)
 
