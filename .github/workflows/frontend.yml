@@ -96,9 +96,7 @@ jobs:
           username: ${{ secrets.SSH_USER }}
           key: ${{ secrets.SSH_KEY }}
           port: ${{ secrets.SSH_PORT != '' && secrets.SSH_PORT || '22' }}
-          # ВАЖНО: одна строка, пути через запятую, без "./"
-          source: "docker-compose.yml,nginx.conf"
-          # target должен быть директорией, не файлом
+          source: "docker-compose.yml,nginx.conf,Dockerfile"
           target: ${{ env.DEPLOY_DIR }}
           overwrite: true
           strip_components: 0
