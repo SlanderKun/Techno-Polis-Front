@@ -104,21 +104,6 @@ jobs:
           strip_components: 0
           rm: false
 
-
-      - name: Remote debug - ensure files exist on server
-        uses: appleboy/ssh-action@v1.2.0
-        with:
-          host: ${{ secrets.SSH_HOST }}
-          username: ${{ secrets.SSH_USER }}
-          key: ${{ secrets.SSH_KEY }}
-          port: ${{ secrets.SSH_PORT != '' && secrets.SSH_PORT || '22' }}
-          script: |
-            set -euxo pipefail
-            cd "${{ env.DEPLOY_DIR }}"
-            pwd
-            ls -la
-            sha256sum docker-compose.yml nginx.conf || true
-
       - name: Remote deploy (frontend only, with debug)
         uses: appleboy/ssh-action@v1.2.0
         env:
