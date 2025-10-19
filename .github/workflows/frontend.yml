@@ -96,7 +96,7 @@ jobs:
           username: ${{ secrets.SSH_USER }}
           key: ${{ secrets.SSH_KEY }}
           port: ${{ secrets.SSH_PORT != '' && secrets.SSH_PORT || '22' }}
-          source: "./"
+          source: "public,src,.env.example,docker-compose.yml,Dockerfile,eslint.config.js,index.html,nginx.conf,package-lock.json,package.json,tsconfig.app.json,tsconfig.json,tsconfig.node.json,vite.config.ts"
 
           target: ${{ env.DEPLOY_DIR }}
           overwrite: true
