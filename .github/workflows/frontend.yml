@@ -137,36 +137,9 @@ jobs:
             EOF
             echo "== deploy.env ==" && cat deploy.env
 
-            # собрать список compose-файлов
-            FILES=""
-            for f in docker-compose.yml compose.yml; do [ -f "$f" ] && FILES="$FILES -f $f"; done
-            for f in compose.override.yml compose.db.yml; do [ -f "$f" ] && FILES="$FILES -f $f"; done
-            [ -n "$FILES" ] || { echo "compose-файлы не найдены в $DEPLOY_DIR"; exit 1; }
-            echo "FILES=$FILES"
-
-            # аккуратно собрать список --env-file (только если файлы существуют)
-            ENVFILES=""
-            [ -f .env ] && ENVFILES="$ENVFILES --env-file .env"
-            [ -f deploy.env ] && ENVFILES="$ENVFILES --env-file deploy.env"
-
-            compose() { docker compose $FILES $ENVFILES "$@"; }
-
-            echo "== docker compose config --services =="
-            compose config --services || true
-
-            # если compose использует image:, подтянем свежий тег
-            compose pull --ignore-buildable || true
-
-            # поднимем фронт и nginx (если есть такие сервисы)
-            (compose up -d frontend || true)
-            (compose up -d nginx || true)
-
-            echo "== docker compose ps =="
-            compose ps || true
-
-            echo "== last logs =="
-            (compose logs --tail=80 nginx || true)
-            (compose logs --tail=80 frontend || true)
+            docker network create shared-net || true
+            docker compose -f docker-compose.yml down
+            docker compose -f docker-compose.yml up -d
 
             # healthcheck
             set +e
