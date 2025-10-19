@@ -144,16 +144,22 @@ jobs:
             [ -n "$FILES" ] || { echo "compose-файлы не найдены в $DEPLOY_DIR"; exit 1; }
             echo "FILES=$FILES"
 
-            docker network create shared-net || true
-            docker compose -f docker-compose.yml down
-            docker compose -f docker-compose.yml up -d
+            # аккуратно собрать список --env-file (только если файлы существуют)
+            ENVFILES=""
+            [ -f .env ] && ENVFILES="$ENVFILES --env-file .env"
+            [ -f deploy.env ] && ENVFILES="$ENVFILES --env-file deploy.env"
 
+            docker network create shared-net || true
+            docker compose down
+            docker compose up -d --build
+
+            exit 0
             # healthcheck
             set +e
             for u in http://localhost/ http://127.0.0.1/; do
               if curl -fsS "$u" >/dev/null 2>&1; then
                 echo "OK: frontend is up at $u"
-                exit 0
+                
               fi
             done
             echo "Frontend healthcheck failed, dumping logs…"
