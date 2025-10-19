@@ -1,14 +1,32 @@
-import React, {type ReactNode} from 'react';
+import React from 'react';
 import {observer} from "mobx-react-lite";
 
+import NavBar from "../NavBar/NavBar.tsx";
+import CustomFooter from "../CustomFooter/CustomFooter.tsx";
+
 interface LayoutProps{
-    children?: ReactNode
+    Component: React.FC
 }
 
-const PageLayout:React.FC<LayoutProps> = ({children}) => {
+const PageLayout:React.FC<LayoutProps> = ({Component}) => {
+
+    // useEffect(() => {
+    //     (async function(){
+    //         useEffect(() => {
+    //             (async function(){
+    //                 // if (!store){
+    //                 //     await store.CoffeeMachinesStore.getBrandsList()
+    //                 // }
+    //             })()
+    //         }, []);
+    //     })()
+    // }, []);
+
     return (
         <div>
-            {children}
+            <NavBar/>
+            <Component/>
+            <CustomFooter/>
         </div>
     );
 };

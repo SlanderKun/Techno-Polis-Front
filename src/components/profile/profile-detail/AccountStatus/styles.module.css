@@ -1,0 +1,12 @@
+.statusWrapper{
+    border-radius: var(--mainBorderRadius);
+    height: 45px;
+    width: fit-content;
+    padding: 0 15px;
+    margin-left: 340px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    color: #FFFFFF;
+    gap: 12px;
+}

@@ -1,0 +1,32 @@
+.accountWrapper{
+    display: flex;
+    flex-direction: row;
+    gap: 22px;
+}
+.accountContent{
+    display: flex;
+    flex-direction: column;
+}
+.imageContainerWrapper{
+    display: flex;
+    flex-direction: column;
+    gap: 13px;
+}
+.imageContainer {
+    background-color: #F4F4F4;
+    border-radius: 160px;
+    width: 320px;
+    height: 320px;
+}
+.section{
+    display: flex;
+    gap: 40px;
+    flex-direction: column;
+}
+.description{
+    padding-top: 16px;
+}
+.changeButton{
+    display: flex;
+    justify-content: center;
+}
