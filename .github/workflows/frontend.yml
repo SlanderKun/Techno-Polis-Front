@@ -1,8 +1,125 @@
-name: Frontend CI/CD (debug hardened)
+# name: Frontend CI/CD (debug hardened)
+
+# on:
+#   push:
+#     branches: [ "master" ]
+#   workflow_dispatch: {}
+
+# concurrency:
+#   group: deploy-frontend
+#   cancel-in-progress: true
+
+# permissions:
+#   contents: read
+#   packages: write
+
+# env:
+#   REGISTRY: ghcr.io
+#   FRONTEND_IMAGE: technopolis-frontend
+#   DEPLOY_DIR: /opt/myapp/frontend   # можно поменять путь здесь
+
+# jobs:
+#   build-and-push:
+#     runs-on: ubuntu-latest
+#     outputs:
+#       owner_lower: ${{ steps.lower_owner.outputs.val }}
+
+#     steps:
+#       - name: Checkout repository
+#         uses: actions/checkout@v4
+#         with: { fetch-depth: 1 }
+
+#       - name: Debug - list files at repo root
+#         run: |
+#           set -euxo pipefail
+#           pwd
+#           echo "GITHUB_WORKSPACE=$GITHUB_WORKSPACE"
+#           ls -la
+#           echo "---- find important files ----"
+#           find . -maxdepth 2 -type f \( -name "Dockerfile" -o -name "nginx.conf" -o -name "docker-compose.yml" \) -print -exec ls -l {} \;
+
+#       - name: Owner -> lowercase
+#         id: lower_owner
+#         shell: bash
+#         run: echo "val=${GITHUB_REPOSITORY_OWNER,,}" >> "$GITHUB_OUTPUT"
+
+#       - name: Login to GHCR
+#         uses: docker/login-action@v3
+#         with:
+#           registry: ${{ env.REGISTRY }}
+#           username: ${{ secrets.SSH_USER }}
+#           password: ${{ secrets.GITHUB_TOKEN }}
+
+#       - name: Setup Buildx
+#         uses: docker/setup-buildx-action@v3
+
+#       - name: Build & Push frontend
+#         id: bp
+#         uses: docker/build-push-action@v6
+#         with:
+#           context: .
+#           file: ./Dockerfile
+#           push: true
+#           tags: |
+#             ${{ env.REGISTRY }}/${{ steps.lower_owner.outputs.val }}/${{ env.FRONTEND_IMAGE }}:sha-${{ github.sha }}
+#           cache-from: type=registry,ref=${{ env.REGISTRY }}/${{ steps.lower_owner.outputs.val }}/${{ env.FRONTEND_IMAGE }}:buildcache
+#           cache-to: type=registry,ref=${{ env.REGISTRY }}/${{ steps.lower_owner.outputs.val }}/${{ env.FRONTEND_IMAGE }}:buildcache,mode=max
+
+#       - name: Debug - image ref
+#         run: |
+#           echo "IMAGE=${{ env.REGISTRY }}/${{ steps.lower_owner.outputs.val }}/${{ env.FRONTEND_IMAGE }}:sha-${{ github.sha }}"
+
+#   deploy:
+#     needs: build-and-push
+#     runs-on: ubuntu-latest
+#     env:
+#       OWNER_LOWER: ${{ needs.build-and-push.outputs.owner_lower }}
+#       FRONTEND_TAG: sha-${{ github.sha }}
+
+#     steps:
+#       - name: Checkout repository (for scp)
+#         uses: actions/checkout@v4
+#         with: { fetch-depth: 1 }
+
+#       - name: Debug - verify files exist before SCP
+#         run: |
+#           set -euxo pipefail
+#           pwd
+#           ls -la
+#           test -f ./docker-compose.yml || (echo "MISS: docker-compose.yml not found at repo root" && exit 1)
+#           test -f ./nginx.conf || (echo "MISS: nginx.conf not found at repo root" && exit 1)
+
+#       - name: Upload compose & nginx to server
+#         uses: appleboy/scp-action@v0.1.7
+#         with:
+#           host: 158.160.201.116  
+#           username: ${{ secrets.SSH_USER }}
+#           key: ${{ secrets.SSH_KEY }}
+#           port: ${{ secrets.SSH_PORT != '' && secrets.SSH_PORT || '22' }}
+#           source: "./"
+
+#           target: ${{ env.DEPLOY_DIR }}
+#           overwrite: true
+#           strip_components: 0
+#           rm: false
+
+#       - name: Remote deploy (frontend only, with debug)
+#         uses: appleboy/ssh-action@v1.2.0
+#         env:
+#           DEPLOY_DIR:     ${{ env.DEPLOY_DIR }}
+#           OWNER_LOWER:    ${{ env.OWNER_LOWER }}
+#           FRONTEND_TAG:   ${{ env.FRONTEND_TAG }}
+#           REGISTRY:       ${{ env.REGISTRY }}
+#           FRONTEND_IMAGE: ${{ env.FRONTEND_IMAGE }}
+#           # Корректные fallback'и без `||`
+#           GHCR_USER:  ${{ secrets.GHCR_READ_USERNAME != '' && secrets.GHCR_READ_USERNAME || github.actor }}
+#           GHCR_TOKEN: ${{ secrets.GHCR_READ_TOKEN    != '' && secrets.GHCR_READ_TOKEN    || secrets.GITHUB_TOKEN }}
+#         with:
+name: Frontend CI/CD
 
 on:
   push:
-    branches: [ "master" ]
+    branches: ["master"]
   workflow_dispatch: {}
 
 concurrency:
@@ -15,8 +132,8 @@ permissions:
 
 env:
   REGISTRY: ghcr.io
-  FRONTEND_IMAGE: technopolis-frontend
-  DEPLOY_DIR: /opt/myapp/frontend   # можно поменять путь здесь
+  BACKEND_IMAGE: technopolis-frontend
+  DEPLOY_DIR: /opt/myapp/frontend
 
 jobs:
   build-and-push:
@@ -25,18 +142,10 @@ jobs:
       owner_lower: ${{ steps.lower_owner.outputs.val }}
 
     steps:
-      - name: Checkout repository
+      - name: Checkout
         uses: actions/checkout@v4
-        with: { fetch-depth: 1 }
-
-      - name: Debug - list files at repo root
-        run: |
-          set -euxo pipefail
-          pwd
-          echo "GITHUB_WORKSPACE=$GITHUB_WORKSPACE"
-          ls -la
-          echo "---- find important files ----"
-          find . -maxdepth 2 -type f \( -name "Dockerfile" -o -name "nginx.conf" -o -name "docker-compose.yml" \) -print -exec ls -l {} \;
+        with:
+          fetch-depth: 1
 
       - name: Owner -> lowercase
         id: lower_owner
@@ -47,18 +156,17 @@ jobs:
         uses: docker/login-action@v3
         with:
           registry: ${{ env.REGISTRY }}
-          username: ${{ secrets.SSH_USER }}
+          username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Setup Buildx
         uses: docker/setup-buildx-action@v3
 
       - name: Build & Push frontend
-        id: bp
         uses: docker/build-push-action@v6
         with:
-          context: .
-          file: ./Dockerfile
+          context: ./app
+          file: ./app/Dockerfile
           push: true
           tags: |
             ${{ env.REGISTRY }}/${{ steps.lower_owner.outputs.val }}/${{ env.FRONTEND_IMAGE }}:sha-${{ github.sha }}
@@ -66,54 +174,60 @@ jobs:
           cache-to: type=registry,ref=${{ env.REGISTRY }}/${{ steps.lower_owner.outputs.val }}/${{ env.FRONTEND_IMAGE }}:buildcache,mode=max
 
       - name: Debug - image ref
-        run: |
-          echo "IMAGE=${{ env.REGISTRY }}/${{ steps.lower_owner.outputs.val }}/${{ env.FRONTEND_IMAGE }}:sha-${{ github.sha }}"
-
-  deploy:
+        run: echo "IMAGE=${{ env.REGISTRY }}/${{ steps.lower_owner.outputs.val }}/${{ env.FRONTEND_IMAGE }}:sha-${{ github.sha }}"
+  upload-backend-files:
     needs: build-and-push
     runs-on: ubuntu-latest
-    env:
-      OWNER_LOWER: ${{ needs.build-and-push.outputs.owner_lower }}
-      FRONTEND_TAG: sha-${{ github.sha }}
-
     steps:
-      - name: Checkout repository (for scp)
+      - name: Checkout repository
         uses: actions/checkout@v4
-        with: { fetch-depth: 1 }
+        with:
+          fetch-depth: 1
 
-      - name: Debug - verify files exist before SCP
-        run: |
-          set -euxo pipefail
-          pwd
-          ls -la
-          test -f ./docker-compose.yml || (echo "MISS: docker-compose.yml not found at repo root" && exit 1)
-          test -f ./nginx.conf || (echo "MISS: nginx.conf not found at repo root" && exit 1)
-
-      - name: Upload compose & nginx to server
+      - name: Upload frontend project to server
         uses: appleboy/scp-action@v0.1.7
         with:
-          host: 158.160.201.116  
+          host: 158.160.201.116
           username: ${{ secrets.SSH_USER }}
           key: ${{ secrets.SSH_KEY }}
           port: ${{ secrets.SSH_PORT != '' && secrets.SSH_PORT || '22' }}
-          source: "./"
-
-          target: ${{ env.DEPLOY_DIR }}
+          source: 
+            - public
+            - src
+            - .env.example
+            - docker-compose.yml
+            - Dockerfile
+            - eslint.config.js
+            - index.html
+            - nginx.conf
+            - package-lock.json
+            - package.json
+            - tsconfig.app.json
+            - tsconfig.json
+            - tsconfig.node.json
+            - vite.config.ts
+          target: /opt/myapp/frontend
           overwrite: true
           strip_components: 0
-          rm: false
 
-      - name: Remote deploy (frontend only, with debug)
+  deploy:
+    needs: upload-frontend-files
+    runs-on: ubuntu-latest
+    env:
+      OWNER_LOWER: ${{ needs.build-and-push.outputs.owner_lower }}
+      BACKEND_TAG: sha-${{ github.sha }}
+
+    steps:
+      - name: Remote deploy (frontend only)
         uses: appleboy/ssh-action@v1.2.0
         env:
           DEPLOY_DIR:     ${{ env.DEPLOY_DIR }}
           OWNER_LOWER:    ${{ env.OWNER_LOWER }}
-          FRONTEND_TAG:   ${{ env.FRONTEND_TAG }}
+          FRONTEND_TAG:    ${{ env.FRONTEND_TAG }}
           REGISTRY:       ${{ env.REGISTRY }}
-          FRONTEND_IMAGE: ${{ env.FRONTEND_IMAGE }}
-          # Корректные fallback'и без `||`
-          GHCR_USER:  ${{ secrets.GHCR_READ_USERNAME != '' && secrets.GHCR_READ_USERNAME || github.actor }}
-          GHCR_TOKEN: ${{ secrets.GHCR_READ_TOKEN    != '' && secrets.GHCR_READ_TOKEN    || secrets.GITHUB_TOKEN }}
+          FRONTEND_IMAGE:  ${{ env.FRONTEND_IMAGE }}
+          GHCR_USER:      ${{ secrets.GHCR_READ_USERNAME != '' && secrets.GHCR_READ_USERNAME || github.actor }}
+          GHCR_TOKEN:     ${{ secrets.GHCR_READ_TOKEN    != '' && secrets.GHCR_READ_TOKEN    || secrets.GITHUB_TOKEN }}
         with:
           host: 158.160.201.116 
           username: ${{ secrets.SSH_USER }}
