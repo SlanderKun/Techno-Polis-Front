@@ -286,7 +286,7 @@ permissions:
 env:
   REGISTRY: ghcr.io
   BACKEND_IMAGE: technopolis-backend
-  DEPLOY_DIR: /opt/myapp/backend
+  DEPLOY_DIR: /opt/myapp/frontend
 
 jobs:
   build-and-push:
@@ -318,8 +318,8 @@ jobs:
       - name: Build & Push backend
         uses: docker/build-push-action@v6
         with:
-          context: ./app
-          file: ./app/Dockerfile
+          context: .
+          file: ./Dockerfile
           push: true
           tags: |
             ${{ env.REGISTRY }}/${{ steps.lower_owner.outputs.val }}/${{ env.BACKEND_IMAGE }}:sha-${{ github.sha }}
@@ -345,7 +345,7 @@ jobs:
           key: ${{ secrets.SSH_KEY }}
           port: ${{ secrets.SSH_PORT != '' && secrets.SSH_PORT || '22' }}
           source: "public,src,.env.example,docker-compose.yml,Dockerfile,eslint.config.js,index.html,nginx.conf,package-lock.json,package.json,tsconfig.app.json,tsconfig.json,tsconfig.node.json,vite.config.ts"
-          target: /opt/myapp/backend
+          target: /opt/myapp/frontend
           overwrite: true
           strip_components: 0
 
