@@ -39,7 +39,12 @@ export const PROFILE_NAME_MAPPER: {
     [ProfileStatuses.UNIVERSITY]: ProfileText.UNIVERSITY,
     [ProfileStatuses.ADMIN]: ProfileText.ADMIN,
 }
+export interface ElementList {
+    title: string,
+    description: string,
+}
 
 export interface IProfile {
     status: ProfileStatuses,
+    elements: ElementList[],
 }

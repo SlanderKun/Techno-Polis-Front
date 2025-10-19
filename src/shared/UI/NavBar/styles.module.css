@@ -2,7 +2,7 @@
     height: 100px;
     width: 100%;
     display: flex;
-    justify-content: space-between;
+    justify-content: end;
     align-items: center;
     position: sticky;
     top: 0;
@@ -20,5 +20,10 @@
     display: flex;
 }
 .navLink{
-
+    display: flex;
+    gap: 10px;
+    color: #000000;
+}
+.menuLink{
+    color: #D31A2B;
 }

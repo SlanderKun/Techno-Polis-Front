@@ -1,14 +1,13 @@
 import React from 'react';
 import styles from "./styles.module.css"
-import {Divider} from "@mui/material";
 import {observer} from "mobx-react-lite";
 
 const CustomFooter:React.FC = () => {
     return (
         <footer>
             <div className={styles.column}>
-                <div className={styles.element}>
-                    <div className={styles.contributor}>
+                <div className={styles.contributor}>
+                    <div className={styles.contributorName}>
                         TeamLeader - Руслан
                     </div>
                     <a href={"https://t.me/SlanderKun"} className={styles.contributorLink}>
@@ -16,18 +15,18 @@ const CustomFooter:React.FC = () => {
                     </a>
                 </div>
             </div>
-            <Divider orientation="vertical" />
+            <div className={styles.separator}/>
             <div className={styles.column}>
-                <div className={styles.element}>
-                    <div className={styles.contributor}>
+                <div className={styles.contributorName}>
+                    <div className={styles.contributorName}>
                         Frontender - Виктория
                     </div>
                     <a href={"https://t.me/merqwi"} className={styles.contributorLink}>
                         @merqwi
                     </a>
                 </div>
-                <div className={styles.element}>
-                    <div className={styles.contributor}>
+                <div className={styles.contributorName}>
+                    <div className={styles.contributorName}>
                         Backender - Арсений
                     </div>
                     <a className={styles.contributorLink}>
@@ -35,10 +34,10 @@ const CustomFooter:React.FC = () => {
                     </a>
                 </div>
             </div>
-            <Divider orientation="vertical" />
+            <div className={styles.separator}/>
             <div className={styles.column}>
-                <div className={styles.element}>
-                    <div className={styles.contributor}>
+                <div className={styles.contributorName}>
+                    <div className={styles.contributorName}>
                         Devops - Денис
                     </div>
                     <a className={styles.contributorLink}>
@@ -46,10 +45,10 @@ const CustomFooter:React.FC = () => {
                     </a>
                 </div>
             </div>
-            <Divider orientation="vertical" />
+            <div className={styles.separator}/>
             <div className={styles.column}>
-                <div className={styles.element}>
-                    <div className={styles.contributor}>
+                <div className={styles.contributorName}>
+                    <div className={styles.contributorName}>
                         Designer - Эльмира
                     </div>
                     <a className={styles.contributorLink}>

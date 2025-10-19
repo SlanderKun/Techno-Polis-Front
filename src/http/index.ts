@@ -1,5 +1,5 @@
 import axios from "axios";
-import type {AuthResponse} from "../models/auth/AuthResponse.ts";
+// import type {AuthResponse} from "../models/auth/AuthResponse.ts";
 
 export const API_URL = import.meta.env.VITE_API_URL;
 const apiInstance = axios.create({
@@ -23,19 +23,6 @@ apiInstance.interceptors.response.use(
       !error.config._isRetry
     ) {
       originalRequest._isRetry = true;
-      try {
-        const response = await axios.post<AuthResponse>(
-          `${API_URL}/auth/refresh-tokens`,
-          {},
-          {
-            withCredentials: true,
-          },
-        );
-        localStorage.setItem("token", response.data.token);
-        return apiInstance.request(originalRequest);
-      } catch (e) {
-        console.log(e);
-      }
     } else {
       throw error;
     }

@@ -29,16 +29,13 @@ const AuthForm:React.FC = () => {
         control
     })
     const onSubmit: SubmitHandler<IFilters> = async(data) => {
-        console.log("gere")
         const formatedData = {
             email: data.email,
             password: data.password,
-            // name: isRegister ? data.name : undefined,
-            // lastName: isRegister ? data.lastName : undefined,
         }
         try {
             if (isRegister){
-                await store.AuthStore.registerProfile(formatedData)
+                // await store.AuthStore.registerProfile(formatedData)
             } else {
                 await store.AuthStore.login(formatedData)
             }

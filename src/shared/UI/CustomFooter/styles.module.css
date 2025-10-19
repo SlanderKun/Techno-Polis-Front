@@ -9,18 +9,22 @@
     gap: 34px;
     align-items: start;
 }
-.element{
-    width: 100%;
+.contributor{
     display: flex;
     flex-direction: column;
     justify-content: center;
 }
-.contributor{
-    display: flex;
-}
 .contributorName{
-
+    display: flex;
+    width: 100%;
+    flex-direction: column;
 }
 .contributorLink{
+    display: flex;
     color: #3153EC;
+}
+.separator{
+    border-left: 1px solid #D3D2D2;
+    height: 100%;
+    margin: 50px 0;
 }

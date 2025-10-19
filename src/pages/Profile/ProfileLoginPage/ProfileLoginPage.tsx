@@ -10,7 +10,6 @@ const ProfileLoginPage:React.FC = () => {
             <section className={styles.pageContainer}>
                 <h2 className={styles.sectionHeader}>Форма авторизации</h2>
                 <AuthForm/>
-
             </section>
         </main>
     );

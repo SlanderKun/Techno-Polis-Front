@@ -3,13 +3,11 @@ import {NavLink} from "react-router-dom";
 import styles from "./styles.module.css";
 import {store} from "../../../main.tsx";
 import {Tooltip} from "@mui/material";
+import AccountCircleOutlinedIcon from '@mui/icons-material/AccountCircleOutlined';
 
 const NavBar:React.FC = () => {
     return (
         <div className={styles.navWrapper}>
-            <div className={styles.contributors}>
-
-            </div>
             <div className={styles.navButtons}>
                 <NavLink className={styles.navLink} to={"/catalog/"}>
                     каталог
@@ -45,8 +43,9 @@ const NavBar:React.FC = () => {
                         </NavLink>
                     </>
                 }
-                <NavLink className={styles.navLink} to={"/profile/"}>
+                <NavLink className={`${styles.navLink} ${styles.menuLink}`} to={"/profile/"}>
                     аккаунт
+                    <AccountCircleOutlinedIcon sx={{color: "#D31A2B"}}/>
                 </NavLink>
             </div>
         </div>

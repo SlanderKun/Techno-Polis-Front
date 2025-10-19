@@ -23,19 +23,18 @@ export default class AuthStore {
         this.isLoading = bool;
     }
 
-    async registerProfile(data: {email: string, password: string}) {
-        this.setLoading(true);
-        try {
-            const response = await AuthService.register(data);
-            if (response.status === 200) {
-                alert("you registered");
-            }
-        } catch (e: any) {
-            console.log(e.response?.data?.message)
-        } finally {
-            this.setLoading(false);
-        }
-    }
+    // async registerProfile(data: {email: string, password: string}) {
+    //     this.setLoading(true);
+    //     try {
+    //         const response = await AuthService.register(data);
+    //         console.log(response);
+    //         localStorage.setItem("session_token", response.session_token);
+    //     } catch (e: any) {
+    //         console.log(e.response?.data?.message)
+    //     } finally {
+    //         this.setLoading(false);
+    //     }
+    // }
 
     async checkAuth() {
         this.setLoading(true);

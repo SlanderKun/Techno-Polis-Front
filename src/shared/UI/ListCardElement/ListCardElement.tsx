@@ -1,15 +1,17 @@
 import React from 'react';
 import styles from "./styles.module.css"
 import {observer} from "mobx-react-lite";
-import {Card} from "@mui/material";
+import {Avatar, Card} from "@mui/material";
 
 interface IProps {
-    fullSize: boolean
+
 }
 
-const ListCardElement:React.FC<IProps> = ({fullSize}) => {
+const ListCardElement:React.FC<IProps> = ({}) => {
     return (
-        <Card className={fullSize ? styles.fullSize : styles.shortSize}></Card>
+        <Card>
+            <Avatar className={styles.avatar}/>
+        </Card>
     );
 };
 
