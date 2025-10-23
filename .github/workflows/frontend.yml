@@ -1,4 +1,4 @@
-name: Universal CI/CD
+name: Template CI/CD
 
 on:
   push:
@@ -13,8 +13,8 @@ permissions:
   contents: read
 
 env:
-  DEPLOY_DIR: /opt/myapp/backend
-  PROJECT_NAME: backend
+  DEPLOY_DIR: /opt/myapp/frontend
+  PROJECT_NAME: frontend
 
 jobs:
   deploy:
@@ -48,17 +48,11 @@ jobs:
             set -e
             cd "$DEPLOY_DIR"
             if [ -f "Makefile" ]; then
-              make deploy
+              make build
+              make migrate
+              make up
             else
               docker compose down || true
               docker compose build
               docker compose up -d
-            fi
-            if curl -fsS http://localhost:8000 >/dev/null 2>&1; then
-              echo "Backend OK"
-            elif curl -fsS http://localhost >/dev/null 2>&1; then
-              echo "Frontend OK"
-            else
-              docker compose logs --tail=50 || true
-              exit 1
-            fi
+
