@@ -47,6 +47,7 @@ const NavBar:React.FC = () => {
                     аккаунт
                     <AccountCircleOutlinedIcon sx={{color: "#D31A2B"}}/>
                 </NavLink>
+
             </div>
         </div>
     );
