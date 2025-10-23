@@ -1,0 +1,24 @@
+.navWrapper{
+    height: 100px;
+    width: 100%;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    position: sticky;
+    top: 0;
+    z-index: 3;
+    background-color: var(--infoBG);
+    padding: 0 50px;
+}
+.navButtons{
+    display: flex;
+    gap: 24px;
+    font-weight: 500;
+    font-size: 14px;
+}
+.contributors{
+    display: flex;
+}
+.navLink{
+
+}

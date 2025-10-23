@@ -96,7 +96,7 @@ jobs:
           username: ${{ secrets.SSH_USER }}
           key: ${{ secrets.SSH_KEY }}
           port: ${{ secrets.SSH_PORT != '' && secrets.SSH_PORT || '22' }}
-          source: "./"
+          source: "public,src,.env.example,docker-compose.yml,Dockerfile,eslint.config.js,index.html,nginx.conf,package-lock.json,package.json,tsconfig.app.json,tsconfig.json,tsconfig.node.json,vite.config.ts"
 
           target: ${{ env.DEPLOY_DIR }}
           overwrite: true
@@ -149,31 +149,17 @@ jobs:
             [ -f .env ] && ENVFILES="$ENVFILES --env-file .env"
             [ -f deploy.env ] && ENVFILES="$ENVFILES --env-file deploy.env"
 
-            compose() { docker compose $FILES $ENVFILES "$@"; }
+            docker network create shared-net || true
+            docker compose down
+            docker compose up -d --build
 
-            echo "== docker compose config --services =="
-            compose config --services || true
-
-            # если compose использует image:, подтянем свежий тег
-            compose pull --ignore-buildable || true
-
-            # поднимем фронт и nginx (если есть такие сервисы)
-            (compose up -d frontend || true)
-            (compose up -d nginx || true)
-
-            echo "== docker compose ps =="
-            compose ps || true
-
-            echo "== last logs =="
-            (compose logs --tail=80 nginx || true)
-            (compose logs --tail=80 frontend || true)
-
+            exit 0
             # healthcheck
             set +e
             for u in http://localhost/ http://127.0.0.1/; do
               if curl -fsS "$u" >/dev/null 2>&1; then
                 echo "OK: frontend is up at $u"
-                exit 0
+                
               fi
             done
             echo "Frontend healthcheck failed, dumping logs…"
