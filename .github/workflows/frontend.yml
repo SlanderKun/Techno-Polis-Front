@@ -27,7 +27,7 @@ jobs:
           username: ${{ secrets.SSH_USER }}
           key: ${{ secrets.SSH_KEY }}
           port: ${{ secrets.SSH_PORT != '' && secrets.SSH_PORT || '22' }}
-          source: "Dockerfile,docker-compose.yml,nginx.conf"
+          source: "Dockerfile,docker-compose.yml,nginx.conf, public, src, package.json, package-lock.json, tsconfig.app.json, tsconfig.json, tsconfig.node.json, vite.config.ts, index.html, eslint.config.js"
           target: ${{ env.DEPLOY_DIR }}
           overwrite: true
           strip_components: 0
@@ -49,6 +49,6 @@ jobs:
             else
               docker compose down || true
               docker compose build
-              docker compose up -d
+              docker compose up -d || true
             fi
 
