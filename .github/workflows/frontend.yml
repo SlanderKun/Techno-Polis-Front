@@ -21,24 +21,16 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - name: Ensure correct context
-        run: |
-          cd "$GITHUB_WORKSPACE"
-          ls -la      
       - uses: appleboy/scp-action@v0.1.7
         with:
           host: ${{ secrets.SSH_HOST }}
           username: ${{ secrets.SSH_USER }}
           key: ${{ secrets.SSH_KEY }}
           port: ${{ secrets.SSH_PORT != '' && secrets.SSH_PORT || '22' }}
-          source: |
-            ./Dockerfile
-            ./docker-compose.yml
-            ./nginx.conf
+          source: "./"
           target: ${{ env.DEPLOY_DIR }}
           overwrite: true
           strip_components: 0
-          working-directory: ${{ github.workspace }}
 
       - uses: appleboy/ssh-action@v1.2.0
         with:
