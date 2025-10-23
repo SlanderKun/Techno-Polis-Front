@@ -9,19 +9,6 @@ interface LayoutProps{
 }
 
 const PageLayout:React.FC<LayoutProps> = ({Component}) => {
-
-    // useEffect(() => {
-    //     (async function(){
-    //         useEffect(() => {
-    //             (async function(){
-    //                 // if (!store){
-    //                 //     await store.CoffeeMachinesStore.getBrandsList()
-    //                 // }
-    //             })()
-    //         }, []);
-    //     })()
-    // }, []);
-
     return (
         <div>
             <NavBar/>
