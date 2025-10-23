@@ -32,7 +32,6 @@ jobs:
             ./Dockerfile
             ./docker-compose.yml
             ./nginx.conf
-            ./.env
           target: ${{ env.DEPLOY_DIR }}
           overwrite: true
           strip_components: 0
